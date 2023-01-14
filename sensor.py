@@ -13,3 +13,6 @@ class SENSOR:
         if t == c.numIterations:
             print(self.values)
         return self.values[t]
+
+    def Save_Values(self):
+        np.save(self.linkName + "Val.npy", self.values)

@@ -7,14 +7,15 @@ import constants as c
 import time
 import numpy as np
 
+
 class SIMULATION:
 
     def __init__(self):
         self.physicsClient = p.connect(p.GUI)
-        self.world = WORLD()
-        self.robot = ROBOT()
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.setGravity(0, 0, c.gravity)
+        self.world = WORLD()
+        self.robot = ROBOT()
 
     def run(self):
         for i in range(c.numIterations):
@@ -24,6 +25,4 @@ class SIMULATION:
             time.sleep(c.frameRate)
 
     def __del__(self):
-        for i in self.robot.sensors:
-            np.save(i.linkName + "Val.npy", i.values)
         p.disconnect()

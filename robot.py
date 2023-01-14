@@ -30,5 +30,9 @@ class ROBOT:
         for m in self.motors:
             m.SetValue(t, self.robotId)
 
+    def getSensors(self):
+        return self.sensors
+
+
 
 
