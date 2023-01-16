@@ -9,10 +9,12 @@ class MOTOR:
     def __init__(self, jointName, amp, freq, offset):
         self.jointName = jointName
         self.motorValues = np.zeros(c.numIterations)
-        self.Prepare_To_Act()
         self.amplitude = amp
         self.frequency = freq
+        if self.jointName == "Torso_BackLeg":
+            self.frequency = self.frequency / 2
         self.offset = offset
+        self.Prepare_To_Act()
 
     def Prepare_To_Act(self):
         self.motorValues = np.sin((np.linspace(0, np.pi * 2, c.numIterations) * self.frequency + self.offset)) * self.amplitude
