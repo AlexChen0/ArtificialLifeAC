@@ -10,12 +10,17 @@ import numpy as np
 
 class SIMULATION:
 
-    def __init__(self):
-        self.physicsClient = p.connect(p.GUI)
+    def __init__(self, DoG, targetID):
+        self.DoG = DoG
+        self.targetID = targetID
+        if DoG == "DIRECT":
+            self.physicsClient = p.connect(p.DIRECT)
+        else:
+            self.physicsClient = p.connect(p.GUI)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.setGravity(0, 0, c.gravity * 10)
         self.world = WORLD()
-        self.robot = ROBOT()
+        self.robot = ROBOT(self.targetID)
 
     def run(self):
         for i in range(c.numIterations):
@@ -23,7 +28,13 @@ class SIMULATION:
             self.robot.Sense(i)
             self.robot.Think()
             self.robot.Act(i)
-            time.sleep(c.frameRate)
+            if self.DoG == "GUI":
+                time.sleep(c.frameRate)
+            else:
+                pass
+
+    def Get_Fitness(self):
+        self.robot.Get_Fitness()
 
     def __del__(self):
         p.disconnect()
