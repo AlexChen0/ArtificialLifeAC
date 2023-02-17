@@ -34,6 +34,14 @@ All information for setting up the bots was found in the reddit ludobots instruc
 
 https://www.reddit.com/r/ludobots/wiki/installation/
 
+#IMPROVING COLLISIONS
+One of the main issues in previous editions of creating 3D creatues was many blocks having intersections with each other.
+This would create a jumbled mess, and adversely affected the creature's ability to move. 
+To minimize this possibility, additional space was created between each of the squares made (offsets for position were adjusted).
+Though it should be mentioned that by assignment 8, I am playing around with an idea of checking relative space of a creature, which should really minimize collisions.
+The way this would work is we start by declaring the initial BodyCube at (0,0,0). If something builds on the +x side, we call the next cube at (1, 0, 0)
+If something builds off -y of the second cube, it is at space (1, -1, 0), and so on. This allows checking of relative space to ensure that cubes do not try to go in spaces occupied by previous cubes
+
 #MORPHOSPACE
 Technically, all bodies are possible. This generates a 3D random branching of limbs, so it can theoretically evolve in an infinite manner of ways. 
 Brains are a similar idea. The generation of sensors and motors is at random, meaning that once hillclimbing is reintroduced, it will be able 
