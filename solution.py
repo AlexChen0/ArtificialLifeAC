@@ -5,6 +5,7 @@ import os
 import random
 import time
 import constants as c
+from BodyCube import BodyCube
 
 
 class SOLUTION:
@@ -17,6 +18,8 @@ class SOLUTION:
         self.weights = self.weights * 2 - 1
         self.fitness = math.inf
         self.ID = ID
+        self.blocks = []
+        self.joints = []
         # print(self.weights)
 
     def Set_ID(self, ID):
@@ -56,20 +59,11 @@ class SOLUTION:
         pyrosim.End()
 
     def Create_Body(self):
-        # length = 1
-        # width = 1
-        # height = 1
-        # x = 0
-        # y = 0
-        # z = 1
-        # legsize = [.15, .15, .3]
-        self.numSegments = random.randint(8, 20)
-        # synthesize sensors and motors here
-        # sensorProbability = random.random()
-        # let's set a minimum probability
-        # while sensorProbability < .5:
-        #     sensorProbability = random.random()
-        sensorProbability = .45
+        self.numSegments = random.randint(5, 15)
+        sensorProbability = .55
+        self.sensorBlocks = []
+        self.joints = []
+        self.blocks = []
         for i in range(self.numSegments):
             if random.random() < sensorProbability:
                 self.sensorBlocks.append(i)
@@ -77,56 +71,92 @@ class SOLUTION:
         print("numSegments: ", self.numSegments)
         pyrosim.Start_URDF("body.urdf")
         # dummy nexts used to figure out positional garbage
-        nextX = 0
-        nextY = 0
-        nextZ = 0
+        nextOccupied = -1
+        TargetParentCube = -1
         for i in range(self.numSegments):
-            sizeX = nextX
-            sizeY = nextY
-            sizeZ = nextZ
-            JointName = str(i) + "_" + str(i + 1)
+            sizeX = random.random() * 2
+            sizeY = random.random() * 2
+            sizeZ = random.random() * 2
             if i == 0:
                 # first.
                 # create initial sizes and get next sizes
-                sizeX = random.random() * 2
-                sizeY = random.random() * 2
-                sizeZ = random.random() * 2
-                nextX = random.random() * 2
-                nextY = random.random() * 2
-                nextZ = random.random() * 2
                 if i in self.sensorBlocks:
-                    pyrosim.Send_Cube(name=str(i), pos=[0, 0, sizeZ / 2], size=[sizeX, sizeY, sizeZ],
-                                      s1='<material name="Green">', s2='    <color rgba="0 1.0 0.0 1.0"/>')
+                    self.blocks.append(BodyCube(name=str(i), position=[0, 0, sizeZ / 2], size=[sizeX, sizeY, sizeZ],
+                                                s1='<material name="Green">', s2='    <color rgba="0 1.0 0.0 1.0"/>'))
                 else:
-                    pyrosim.Send_Cube(name=str(i), pos=[0, 0, sizeZ / 2], size=[sizeX, sizeY, sizeZ],
-                                      s1='<material name="Cyan">', s2='    <color rgba="0 1.0 1.0 1.0"/>')
-                pyrosim.Send_Joint(name=JointName, parent=str(i), child=str(i + 1), type="revolute",
-                                   position=[sizeX/2 - nextX, 0, 0], jointAxis="0 0 1")
-                # joint gotten, now done
-            elif i == self.numSegments - 1:
-                # last
-                # position still 0 0 0 due to relative nature, but no more need to apply joint
-                if i in self.sensorBlocks:
-                    pyrosim.Send_Cube(name=str(i), pos=[0, 0, sizeZ / 2], size=[sizeX, sizeY, sizeZ],
-                                      s1='<material name="Green">', s2='    <color rgba="0 1.0 0.0 1.0"/>')
-                else:
-                    pyrosim.Send_Cube(name=str(i), pos=[0, 0, sizeZ / 2], size=[sizeX, sizeY, sizeZ],
-                                      s1='<material name="Cyan">', s2='    <color rgba="0 1.0 1.0 1.0"/>')
+                    self.blocks.append(BodyCube(name=str(i), position=[0, 0, sizeZ / 2], size=[sizeX, sizeY, sizeZ],
+                                                s1='<material name="Cyan">', s2='    <color rgba="0 1.0 1.0 1.0"/>'))
             else:
-                # in the middle
+                # in the middle and for the last
                 # position should be 0 0 0 thanks to joint stuff already figured out
+                # that said we need to figure out from the next target block where to assemble this one
+                # joints do not need to be tracked by BodyCube, since they are guaranteed between 2 cubes
+                # that said, now we need to decide which is the next segment that will be occupied
+                # therefore, we no longer calculate where the joint is here, and we do it before calling cubes
+                # but watch out: we need to figure out where the next cube goes too -- who's the parent?
+                targetParentCube = random.randint(0, len(self.blocks) - 1)
+                while self.blocks[targetParentCube].occupied == [1, 1, 1, 1, 1, 1]:
+                    # guaranteed to not inf loop, mathematically impossible to have all cubes all occupied
+                    targetParentCube = random.randint(0, len(self.blocks))
+                openIndicies = [i for i in range(len(self.blocks[targetParentCube].occupied))
+                                if self.blocks[targetParentCube].occupied[i] == 0]
+
+                nextOccupied = random.choice(openIndicies)
+                pos, jA = self.createJointArgument([sizeX, sizeY, sizeZ], self.blocks[targetParentCube].size, nextOccupied)
+                # where the joint is is decided by nextOccupied, since we are either going to be making it in one of the
+                # 6 faces of the block, now we set that to be occupied
+                self.blocks[targetParentCube].setOccupied(nextOccupied)
+                JointName = str(targetParentCube) + "_" + str(i)
+                self.joints.append(JointName)
+                pyrosim.Send_Joint(name=JointName, parent=str(targetParentCube), child=str(i), type="revolute",
+                                   position=pos, jointAxis=jA)
+                # joint gotten, now cube is called down
+                # must call down cube to ensure that it is in a position appropriate given the nextOccupied area
+                # complicated, we try this naive solution for the moment.
                 if i in self.sensorBlocks:
-                    pyrosim.Send_Cube(name=str(i), pos=[0, 0, sizeZ / 2], size=[sizeX, sizeY, sizeZ],
-                                      s1='<material name="Green">', s2='    <color rgba="0 1.0 0.0 1.0"/>')
+                    self.blocks.append(BodyCube(name=str(i), position=[0, 0, sizeZ / 2], size=[sizeX, sizeY, sizeZ],
+                                                s1='<material name="Green">', s2='    <color rgba="0 1.0 0.0 1.0"/>'))
                 else:
-                    pyrosim.Send_Cube(name=str(i), pos=[0, 0, sizeZ / 2], size=[sizeX, sizeY, sizeZ],
-                                      s1='<material name="Cyan">', s2='    <color rgba="0 1.0 1.0 1.0"/>')
-                nextX = random.random() * 2
-                nextY = random.random() * 2
-                nextZ = random.random() * 2
-                pyrosim.Send_Joint(name=JointName, parent=str(i), child=str(i + 1), type="revolute",
-                                   position=[sizeX / 2 - nextX, 0, 0], jointAxis="0 0 1")
+                    self.blocks.append(BodyCube(name=str(i), position=[0, 0, sizeZ / 2], size=[sizeX, sizeY, sizeZ],
+                                                s1='<material name="Cyan">', s2='    <color rgba="0 1.0 1.0 1.0"/>'))
+                # tricky, if we block off the -x of previous, we want to block the +x of this block
+                # how do we do this?
+                # if nextOccupied is odd -> attributes to 1, 3, 5 -> 0, 2, 4 respectively
+                # if nextOccupied is even -> attributes to 0, 2, 4 -> 1, 3, 5. this line should do:
+                self.blocks[i].setOccupied(nextOccupied - 1 if nextOccupied % 2 == 1 else nextOccupied + 1)
         pyrosim.End()
+
+    def createJointArgument(self, currSize, nextSize, nextOccupied):
+        if nextOccupied == 0:
+            # generate block in +x
+            position = [currSize[0] / 2 - nextSize[0], 0, 0]
+            JointAxis = "0 1 1"
+        elif nextOccupied == 1:
+            # generate block in -x
+            position = [-currSize[0] / 2 + nextSize[0], 0, 0]
+            JointAxis = "0 1 1"
+        elif nextOccupied == 2:
+            # generate block in +y
+            position = [0, currSize[1] / 2 - nextSize[1], 0]
+            JointAxis = "1 0 1"
+        elif nextOccupied == 3:
+            # generate block in -y
+            position = [0, -currSize[1] / 2 + nextSize[1], 0]
+            JointAxis = "1 0 1"
+        elif nextOccupied == 4:
+            # generate block in +z
+            position = [0, 0, currSize[2] / 2 - nextSize[2]]
+            JointAxis = "1 1 0"
+        elif nextOccupied == 5:
+            # generate block in -z
+            position = [0, 0, -currSize[2] / 2 + nextSize[2]]
+            JointAxis = "1 1 0"
+        else:
+            # generate block in + x
+            print("what")
+            position = [0, 0, 0]
+            JointAxis = "0 0 1"
+        return position, JointAxis
 
     def Create_Brain(self, segmentCount):
         pyrosim.Start_NeuralNetwork("brain" + str(self.ID) + ".nndf")
@@ -143,12 +173,11 @@ class SOLUTION:
                 pyrosim.Send_Sensor_Neuron(name=sensorCount, linkName=str(i))
                 sensorCount += 1
         # same for motor
-        for i in range(segmentCount):
+        for i in range(len(self.joints)):
             # only send a sensor or a motor if we roll lower than the set probability
-            if random.random() < motorProbability and i < segmentCount - 1:
+            if random.random() < motorProbability:
                 # add the sensor
-                JointName = str(i) + "_" + str(i + 1)
-                pyrosim.Send_Motor_Neuron(name=sensorCount + motorCount, jointName=JointName)
+                pyrosim.Send_Motor_Neuron(name=sensorCount + motorCount, jointName=self.joints[i])
                 motorCount += 1
         # set self.weights here now
         self.numMotors = motorCount
