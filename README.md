@@ -1,3 +1,8 @@
+# RUNNING THE PROGRAM
+simply navigate to this directory and use the command:
+
+python3 main.py
+
 # HOW THE CREATURES ARE GENERATED
 At the start of generation, the number of boxes that will be generated is determined.
 Afterwards, the program iterates through the boxes to decide which boxes will have sensors. 
@@ -23,6 +28,11 @@ sensor neurons for each of the blocks that have been designated for sensors.
 Once the sensors are complete, motors can be generated for the joints that were created from the body. We look in self.joints and 
 for each of the joints, we decide randomly which gets a motor placed. Finally, the array of sensors and motors get a designated value
 chosen at random for the amount of weight assigned. Thus, the brain is complete. 
+
+#Morphospace
+Technically, all bodies are possible. This generates a 3D random branching of limbs, so it can theoretically evolve in an infinite manner of ways. 
+Brains are a similar idea. The generation of sensors and motors is at random, meaning that once hillclimbing is reintroduced, it will be able 
+to generate any type of favorable brain condition. Similarly, all sensors can affect all motors, as this amount is random too. 
 
 #DIAGRAM
 A diagram can be found below, once I figure out how to do that. 
