@@ -59,8 +59,8 @@ class SOLUTION:
         pyrosim.End()
 
     def Create_Body(self):
-        self.numSegments = random.randint(5, 15)
-        sensorProbability = .55
+        self.numSegments = random.randint(5, 10)
+        sensorProbability = .65
         self.sensorBlocks = []
         self.joints = []
         self.blocks = []
@@ -74,9 +74,9 @@ class SOLUTION:
         nextOccupied = -1
         TargetParentCube = -1
         for i in range(self.numSegments):
-            sizeX = random.random() * 2
-            sizeY = random.random() * 2
-            sizeZ = random.random() * 2
+            sizeX = random.random() * .8 + .2
+            sizeY = random.random() * .8 + .2
+            sizeZ = random.random() * .8 + .2
             if i == 0:
                 # first.
                 # create initial sizes and get next sizes
@@ -113,11 +113,13 @@ class SOLUTION:
                 # joint gotten, now cube is called down
                 # must call down cube to ensure that it is in a position appropriate given the nextOccupied area
                 # complicated, we try this naive solution for the moment.
+                # we need to figure out how to create the spacing given
+                relativePos = self.createPositionalArgument(nextOccupied, [sizeX, sizeY, sizeZ])
                 if i in self.sensorBlocks:
-                    self.blocks.append(BodyCube(name=str(i), position=[0, 0, sizeZ / 2], size=[sizeX, sizeY, sizeZ],
+                    self.blocks.append(BodyCube(name=str(i), position=relativePos, size=[sizeX, sizeY, sizeZ],
                                                 s1='<material name="Green">', s2='    <color rgba="0 1.0 0.0 1.0"/>'))
                 else:
-                    self.blocks.append(BodyCube(name=str(i), position=[0, 0, sizeZ / 2], size=[sizeX, sizeY, sizeZ],
+                    self.blocks.append(BodyCube(name=str(i), position=relativePos, size=[sizeX, sizeY, sizeZ],
                                                 s1='<material name="Cyan">', s2='    <color rgba="0 1.0 1.0 1.0"/>'))
                 # tricky, if we block off the -x of previous, we want to block the +x of this block
                 # how do we do this?
@@ -129,27 +131,27 @@ class SOLUTION:
     def createJointArgument(self, currSize, nextSize, nextOccupied):
         if nextOccupied == 0:
             # generate block in +x
-            position = [currSize[0] / 2 - nextSize[0], 0, 0]
+            position = [currSize[0]/2 - nextSize[0]/2, 0, 0]
             JointAxis = "0 1 1"
         elif nextOccupied == 1:
             # generate block in -x
-            position = [-currSize[0] / 2 + nextSize[0], 0, 0]
+            position = [-currSize[0]/2 + nextSize[0]/2, 0, 0]
             JointAxis = "0 1 1"
         elif nextOccupied == 2:
             # generate block in +y
-            position = [0, currSize[1] / 2 - nextSize[1], 0]
+            position = [0, currSize[1]/2 - nextSize[1]/2, 0]
             JointAxis = "1 0 1"
         elif nextOccupied == 3:
             # generate block in -y
-            position = [0, -currSize[1] / 2 + nextSize[1], 0]
+            position = [0, -currSize[1]/2 + nextSize[1]/2, 0]
             JointAxis = "1 0 1"
         elif nextOccupied == 4:
             # generate block in +z
-            position = [0, 0, currSize[2] / 2 - nextSize[2]]
+            position = [0, 0, currSize[2]/2 - nextSize[0]/2]
             JointAxis = "1 1 0"
         elif nextOccupied == 5:
             # generate block in -z
-            position = [0, 0, -currSize[2] / 2 + nextSize[2]]
+            position = [0, 0, -currSize[2]/2 + nextSize[0]/2]
             JointAxis = "1 1 0"
         else:
             # generate block in + x
@@ -158,11 +160,25 @@ class SOLUTION:
             JointAxis = "0 0 1"
         return position, JointAxis
 
+    def createPositionalArgument(self, facing, size):
+        if facing == 0:
+            return [size[0], 0, 0]
+        if facing == 1:
+            return [-size[0], 0, 0]
+        if facing == 2:
+            return [0, size[1], 0]
+        if facing == 3:
+            return [0, -size[1], 0]
+        if facing == 4:
+            return [0, 0, size[2]]
+        else:
+            return [0, 0, -size[2]]
+
     def Create_Brain(self, segmentCount):
         pyrosim.Start_NeuralNetwork("brain" + str(self.ID) + ".nndf")
         # let's set a minimum probability
         motorProbability = random.random()
-        while motorProbability < .5:
+        while motorProbability < .7:
             motorProbability = random.random()
         sensorCount = 0
         motorCount = 0
