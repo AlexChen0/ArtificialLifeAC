@@ -29,7 +29,12 @@ Once the sensors are complete, motors can be generated for the joints that were 
 for each of the joints, we decide randomly which gets a motor placed. Finally, the array of sensors and motors get a designated value
 chosen at random for the amount of weight assigned. Thus, the brain is complete. 
 
-#Morphospace
+#SOURCES
+All information for setting up the bots was found in the reddit ludobots instructions starting here:
+
+https://www.reddit.com/r/ludobots/wiki/installation/
+
+#MORPHOSPACE
 Technically, all bodies are possible. This generates a 3D random branching of limbs, so it can theoretically evolve in an infinite manner of ways. 
 Brains are a similar idea. The generation of sensors and motors is at random, meaning that once hillclimbing is reintroduced, it will be able 
 to generate any type of favorable brain condition. Similarly, all sensors can affect all motors, as this amount is random too. 
