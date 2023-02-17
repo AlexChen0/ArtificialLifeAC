@@ -26,3 +26,4 @@ chosen at random for the amount of weight assigned. Thus, the brain is complete.
 
 #DIAGRAM
 A diagram can be found below, once I figure out how to do that. 
+![alt text](https://github.com/AlexChen0/ArtificialLifeAC/blob/main/3DCreatureLogic.png)
