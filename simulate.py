@@ -11,6 +11,7 @@ from simulation import SIMULATION
 # to remember: your reddit for this course is LudobotsIsBased
 directOrGUI = sys.argv[1]
 targetID = sys.argv[2]
+print("targetID: ", targetID)
 simulation = SIMULATION(directOrGUI, targetID)
 simulation.run()
 

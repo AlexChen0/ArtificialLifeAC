@@ -9,14 +9,19 @@ import os
 class ROBOT:
 
     def __init__(self, targetID):
+        print("robot made")
         self.targetID = targetID
         self.sensors = {}
         self.motors = {}
-        self.robotId = p.loadURDF("body.urdf")
+        self.robotId = p.loadURDF("body" + str(targetID) + ".urdf")
+        os.system("rm body" + str(targetID) + ".urdf")
         pyrosim.Prepare_To_Simulate(self.robotId)
         self.Prepare_To_Sense()
         self.Prepare_To_Act()
+        print("sensor key list: ", self.sensors.keys())
+        print("motor key list: ", self.motors.keys())
         self.nn = NEURAL_NETWORK("brain" + str(targetID) + ".nndf")
+        print("neuron names: ", self.nn.Get_Neuron_Names())
         os.system("rm brain" + str(targetID) + ".nndf")
 
     def Prepare_To_Sense(self):

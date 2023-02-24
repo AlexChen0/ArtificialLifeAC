@@ -72,7 +72,7 @@ class SOLUTION:
                 self.sensorBlocks.append(i)
         self.numSensors = len(self.sensorBlocks)
         print("numSegments: ", self.numSegments)
-        pyrosim.Start_URDF("body.urdf")
+        pyrosim.Start_URDF("body" + str(self.ID) + ".urdf")
         # dummy nexts used to figure out positional garbage
         for i in range(self.numSegments):
             sizeX = random.random() * .8 + .2
@@ -86,13 +86,13 @@ class SOLUTION:
                 # create initial sizes and get next sizes
                 if i in self.sensorBlocks:
                     self.relPositions.append([0, 0, 0])
-                    self.blocks.append(BodyCube(name=str(i), position=[0, 0, sizeZ / 2], size=[sizeX, sizeY, sizeZ],
-                                                relPos=[0, 0, 0], parentJointPos=[0, 0, 0], parentJointFace=6,
+                    self.blocks.append(BodyCube(name=str(i), position=[0, 0, 2 + sizeZ / 2], size=[sizeX, sizeY, sizeZ],
+                                                relPos=[0, 0, 0], parentJointPos=[0, 0, 2], parentJointFace=6,
                                                 s1='<material name="Green">', s2='    <color rgba="0 1.0 0.0 1.0"/>'))
                 else:
                     self.relPositions.append([0, 0, 0])
-                    self.blocks.append(BodyCube(name=str(i), position=[0, 0, sizeZ / 2], size=[sizeX, sizeY, sizeZ],
-                                                relPos=[0, 0, 0], parentJointPos=[0, 0, 0], parentJointFace=6,
+                    self.blocks.append(BodyCube(name=str(i), position=[0, 0, 2 + sizeZ / 2], size=[sizeX, sizeY, sizeZ],
+                                                relPos=[0, 0, 0], parentJointPos=[0, 0, 2], parentJointFace=6,
                                                 s1='<material name="Cyan">', s2='    <color rgba="0 1.0 1.0 1.0"/>'))
             else:
                 # in the middle and for the last
@@ -114,7 +114,7 @@ class SOLUTION:
                             relPosCheck = self.calculateRelativePosition(targetParentCube, j)
                             if relPosCheck in self.relPositions:
                                 openIndicies.remove(j)
-                            if relPosCheck[2] < 0:
+                            if relPosCheck[2] < -3:
                                 openIndicies.remove(j)
                         # now if there's still possible areas to add links, we accept this block
                         if len(openIndicies) > 0:
@@ -159,27 +159,27 @@ class SOLUTION:
             # absolute position
             if nextOccupied == 0:
                 # generate block in +x
-                position = [currSize[0] / 2, 0, currSize[2] / 2]
+                position = [currSize[0] / 2, 0, 2 + currSize[2] / 2]
                 JointAxis = "0 1 1"
             elif nextOccupied == 1:
                 # generate block in -x
-                position = [-currSize[0] / 2, 0, currSize[2] / 2]
+                position = [-currSize[0] / 2, 0, 2 + currSize[2] / 2]
                 JointAxis = "0 1 1"
             elif nextOccupied == 2:
                 # generate block in +y
-                position = [0, currSize[1] / 2, currSize[2] / 2]
+                position = [0, currSize[1] / 2, 2 + currSize[2] / 2]
                 JointAxis = "1 0 1"
             elif nextOccupied == 3:
                 # generate block in -y
-                position = [0, -currSize[1] / 2, currSize[2] / 2]
+                position = [0, -currSize[1] / 2, 2 + currSize[2] / 2]
                 JointAxis = "1 0 1"
             elif nextOccupied == 4:
                 # generate block in +z
-                position = [0, 0, currSize[2]]
+                position = [0, 0, 2 + currSize[2]]
                 JointAxis = "1 1 0"
             elif nextOccupied == 5:
                 # generate block in -z
-                position = [0, 0, 0]
+                position = [0, 0, 2]
                 JointAxis = "1 1 0"
             else:
                 # generate block in + x
@@ -419,7 +419,7 @@ class SOLUTION:
         pyrosim.Start_NeuralNetwork("brain" + str(self.ID) + ".nndf")
         # let's set a minimum probability
         motorProbability = random.random()
-        while motorProbability < .7:
+        while motorProbability < .6:
             motorProbability = random.random()
         sensorCount = 0
         motorCount = 0
