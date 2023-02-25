@@ -7,7 +7,10 @@ import time
 import constants as c
 from BodyCube import BodyCube
 from JointArg import jointArg
-
+# note to future self (2/24):
+# Currently preliminary pyrosim loaders for new urdf and nndf files are prepared, but you will need to
+# make the evolve function add/modify/remove links.
+# Further, you need to get PHC to use the original create functions on generation 1, and new functions on all subsequent
 
 class SOLUTION:
     def __init__(self, ID):
