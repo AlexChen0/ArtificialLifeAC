@@ -13,7 +13,7 @@ class BodyCube:
         self.occupied = [0, 0, 0, 0, 0, 0]
         self.s1 = s1
         self.s2 = s2
-        pyrosim.Send_Cube(name=self.name, pos=self.position, size=self.size, s1=self.s1, s2=self.s2)
+
 
     def setOccupied(self, target):
         self.occupied[target] = 1

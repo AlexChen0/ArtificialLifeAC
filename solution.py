@@ -6,6 +6,7 @@ import random
 import time
 import constants as c
 from BodyCube import BodyCube
+from JointArg import jointArg
 
 
 class SOLUTION:
@@ -21,6 +22,8 @@ class SOLUTION:
         self.blocks = []
         self.joints = []
         self.relPositions = []
+        self.jointArgs = []
+        self.motorJoints = []
         # print(self.weights)
 
     def Set_ID(self, ID):
@@ -61,17 +64,19 @@ class SOLUTION:
         pyrosim.End()
 
     def Create_Body(self):
+        # completely new body assembled if there is no parameter
         self.numSegments = random.randint(8, 15)
         sensorProbability = .65
         self.sensorBlocks = []
         self.joints = []
         self.blocks = []
         self.relPositions = []
+        self.jointArgs = []
         for i in range(self.numSegments):
             if random.random() < sensorProbability:
                 self.sensorBlocks.append(i)
         self.numSensors = len(self.sensorBlocks)
-        print("numSegments: ", self.numSegments)
+        # print("numSegments: ", self.numSegments)
         pyrosim.Start_URDF("body" + str(self.ID) + ".urdf")
         # dummy nexts used to figure out positional garbage
         for i in range(self.numSegments):
@@ -89,11 +94,15 @@ class SOLUTION:
                     self.blocks.append(BodyCube(name=str(i), position=[0, 0, 2 + sizeZ / 2], size=[sizeX, sizeY, sizeZ],
                                                 relPos=[0, 0, 0], parentJointPos=[0, 0, 2], parentJointFace=6,
                                                 s1='<material name="Green">', s2='    <color rgba="0 1.0 0.0 1.0"/>'))
+                    pyrosim.Send_Cube(name=str(i), pos=[0, 0, 2 + sizeZ / 2], size=[sizeX, sizeY, sizeZ],
+                                      s1='<material name="Green">', s2='    <color rgba="0 1.0 0.0 1.0"/>')
                 else:
                     self.relPositions.append([0, 0, 0])
                     self.blocks.append(BodyCube(name=str(i), position=[0, 0, 2 + sizeZ / 2], size=[sizeX, sizeY, sizeZ],
                                                 relPos=[0, 0, 0], parentJointPos=[0, 0, 2], parentJointFace=6,
                                                 s1='<material name="Cyan">', s2='    <color rgba="0 1.0 1.0 1.0"/>'))
+                    pyrosim.Send_Cube(name=str(i), pos=[0, 0, 2 + sizeZ / 2], size=[sizeX, sizeY, sizeZ],
+                                      s1='<material name="Cyan">', s2='    <color rgba="0 1.0 1.0 1.0"/>')
             else:
                 # in the middle and for the last
                 # position should be 0 0 0 thanks to joint stuff already figured out
@@ -132,6 +141,8 @@ class SOLUTION:
                 self.joints.append(JointName)
                 pyrosim.Send_Joint(name=JointName, parent=str(targetParentCube), child=str(i), type="revolute",
                                    position=pos, jointAxis=jA)
+                self.jointArgs.append(jointArg(name=JointName, parent=str(targetParentCube),
+                                               child=str(i), position=pos, jointAxis=jA))
                 # joint gotten, now cube is called down
                 # must call down cube to ensure that it is in a position appropriate given the nextOccupied area
                 # complicated, we try this naive solution for the moment.
@@ -142,17 +153,39 @@ class SOLUTION:
                     self.blocks.append(BodyCube(name=str(i), position=relativePos, size=[sizeX, sizeY, sizeZ],
                                                 relPos=newRelPos, parentJointPos=pos, parentJointFace=nextJointFace,
                                                 s1='<material name="Green">', s2='    <color rgba="0 1.0 0.0 1.0"/>'))
+                    pyrosim.Send_Cube(name=str(i), pos=relativePos, size=[sizeX, sizeY, sizeZ],
+                                      s1='<material name="Green">', s2='    <color rgba="0 1.0 0.0 1.0"/>')
                 else:
                     self.blocks.append(BodyCube(name=str(i), position=relativePos, size=[sizeX, sizeY, sizeZ],
                                                 relPos=newRelPos, parentJointPos=pos, parentJointFace=nextJointFace,
                                                 s1='<material name="Cyan">', s2='    <color rgba="0 1.0 1.0 1.0"/>'))
+                    pyrosim.Send_Cube(name=str(i), pos=relativePos, size=[sizeX, sizeY, sizeZ],
+                                      s1='<material name="Cyan">', s2='    <color rgba="0 1.0 1.0 1.0"/>')
                 # tricky, if we block off the -x of previous, we want to block the +x of this block
                 # how do we do this?
                 # if nextOccupied is odd -> attributes to 1, 3, 5 -> 0, 2, 4 respectively
                 # if nextOccupied is even -> attributes to 0, 2, 4 -> 1, 3, 5. this line should do:
                 self.blocks[i].setOccupied(nextOccupied - 1 if nextOccupied % 2 == 1 else nextOccupied + 1)
         pyrosim.End()
-        print(self.joints)
+        # print(self.joints)
+
+    def Create_Body_From_Existing(self, generationCount):
+        # creates the body out of the existing joint and link subsets, so it loads the data which can then be used
+        # as basis for the body and brain
+        pyrosim.Start_URDF("body" + str(self.ID) + ".urdf")
+        for i in range(len(self.blocks)):
+            if i == 0:
+                self.relPositions.append([0, 0, 0])
+                pyrosim.Send_Cube(name=self.blocks[i].name, pos=self.blocks[i].position, size=self.blocks[i].size,
+                                  s1=self.blocks[i].s1, s2=self.blocks[i].s2)
+            else:
+                # we can assume that the joints and blocks are all in order, so we can do this
+                pyrosim.Send_Joint(name=self.jointArgs[i-1].name, parent=self.jointArgs[i-1].parent,
+                                   child=self.jointArgs[i-1].child, type=self.jointArgs[i-1].theType,
+                                   position=self.jointArgs[i-1].position, jointAxis=self.jointArgs[i-1].jointAxis)
+                pyrosim.Send_Cube(name=self.blocks[i].name, pos=self.blocks[i].position, size=self.blocks[i].size,
+                                  s1=self.blocks[i].s1, s2=self.blocks[i].s2)
+            pyrosim.End()
 
     def createJointArgument(self, currSize, index, parentBlockSize, parentJointFace, nextOccupied):
         if index == 0:
@@ -200,19 +233,19 @@ class SOLUTION:
                     JointAxis = "0 0 1"
                 elif nextOccupied == 2:
                     # generate block in +y
-                    position = [parentBlockSize[0]/2, parentBlockSize[1]/2, 0]
+                    position = [parentBlockSize[0] / 2, parentBlockSize[1] / 2, 0]
                     JointAxis = "1 0 1"
                 elif nextOccupied == 3:
                     # generate block in -y
-                    position = [parentBlockSize[0]/2, -parentBlockSize[1]/2, 0]
+                    position = [parentBlockSize[0] / 2, -parentBlockSize[1] / 2, 0]
                     JointAxis = "1 0 1"
                 elif nextOccupied == 4:
                     # generate block in +z
-                    position = [parentBlockSize[0]/2, 0, parentBlockSize[2]/2]
+                    position = [parentBlockSize[0] / 2, 0, parentBlockSize[2] / 2]
                     JointAxis = "1 1 0"
                 elif nextOccupied == 5:
                     # generate block in -z
-                    position = [parentBlockSize[0]/2, 0, -parentBlockSize[2]/2]
+                    position = [parentBlockSize[0] / 2, 0, -parentBlockSize[2] / 2]
                     JointAxis = "1 1 0"
                 else:
                     # generate block in + x
@@ -232,19 +265,19 @@ class SOLUTION:
                     JointAxis = "0 1 1"
                 elif nextOccupied == 2:
                     # generate block in +y
-                    position = [-parentBlockSize[0]/2, parentBlockSize[1]/2, 0]
+                    position = [-parentBlockSize[0] / 2, parentBlockSize[1] / 2, 0]
                     JointAxis = "1 0 1"
                 elif nextOccupied == 3:
                     # generate block in -y
-                    position = [-parentBlockSize[0]/2, -parentBlockSize[1]/2, 0]
+                    position = [-parentBlockSize[0] / 2, -parentBlockSize[1] / 2, 0]
                     JointAxis = "1 0 1"
                 elif nextOccupied == 4:
                     # generate block in +z
-                    position = [-parentBlockSize[0]/2, 0, parentBlockSize[2]/2]
+                    position = [-parentBlockSize[0] / 2, 0, parentBlockSize[2] / 2]
                     JointAxis = "1 1 0"
                 elif nextOccupied == 5:
                     # generate block in -z
-                    position = [-parentBlockSize[0]/2, 0, -parentBlockSize[2]/2]
+                    position = [-parentBlockSize[0] / 2, 0, -parentBlockSize[2] / 2]
                     JointAxis = "1 1 0"
                 else:
                     # generate block in + x
@@ -254,11 +287,11 @@ class SOLUTION:
             elif parentJointFace == 3:
                 if nextOccupied == 0:
                     # generate block in +x
-                    position = [parentBlockSize[0]/2, parentBlockSize[1]/2, 0]
+                    position = [parentBlockSize[0] / 2, parentBlockSize[1] / 2, 0]
                     JointAxis = "0 1 1"
                 elif nextOccupied == 1:
                     # generate block in -x
-                    position = [-parentBlockSize[0]/2, parentBlockSize[1]/2, 0]
+                    position = [-parentBlockSize[0] / 2, parentBlockSize[1] / 2, 0]
                     JointAxis = "0 1 1"
                 elif nextOccupied == 2:
                     # generate block in +y
@@ -272,11 +305,11 @@ class SOLUTION:
                     JointAxis = "0 0 1"
                 elif nextOccupied == 4:
                     # generate block in +z
-                    position = [0, parentBlockSize[1]/2, parentBlockSize[2] / 2]
+                    position = [0, parentBlockSize[1] / 2, parentBlockSize[2] / 2]
                     JointAxis = "1 1 0"
                 elif nextOccupied == 5:
                     # generate block in -z
-                    position = [0, parentBlockSize[1]/2, -parentBlockSize[2] / 2]
+                    position = [0, parentBlockSize[1] / 2, -parentBlockSize[2] / 2]
                     JointAxis = "1 1 0"
                 else:
                     # generate block in + x
@@ -286,11 +319,11 @@ class SOLUTION:
             elif parentJointFace == 2:
                 if nextOccupied == 0:
                     # generate block in +x
-                    position = [parentBlockSize[0]/2, -parentBlockSize[1]/2, 0]
+                    position = [parentBlockSize[0] / 2, -parentBlockSize[1] / 2, 0]
                     JointAxis = "0 1 1"
                 elif nextOccupied == 1:
                     # generate block in -x
-                    position = [-parentBlockSize[0], -parentBlockSize[1]/2, 0]
+                    position = [-parentBlockSize[0], -parentBlockSize[1] / 2, 0]
                     JointAxis = "0 1 1"
                 elif nextOccupied == 2:
                     # generate block in +y
@@ -304,11 +337,11 @@ class SOLUTION:
                     JointAxis = "1 0 1"
                 elif nextOccupied == 4:
                     # generate block in +z
-                    position = [0, -parentBlockSize[1]/2, parentBlockSize[2] / 2]
+                    position = [0, -parentBlockSize[1] / 2, parentBlockSize[2] / 2]
                     JointAxis = "1 1 0"
                 elif nextOccupied == 5:
                     # generate block in -z
-                    position = [0, -parentBlockSize[1]/2, -parentBlockSize[2] / 2]
+                    position = [0, -parentBlockSize[1] / 2, -parentBlockSize[2] / 2]
                     JointAxis = "1 1 0"
                 else:
                     # generate block in + x
@@ -318,11 +351,11 @@ class SOLUTION:
             elif parentJointFace == 5:
                 if nextOccupied == 0:
                     # generate block in +x
-                    position = [parentBlockSize[0]/2, 0, parentBlockSize[2]/2]
+                    position = [parentBlockSize[0] / 2, 0, parentBlockSize[2] / 2]
                     JointAxis = "0 1 1"
                 elif nextOccupied == 1:
                     # generate block in -x
-                    position = [-parentBlockSize[0]/2, 0, parentBlockSize[2]/2]
+                    position = [-parentBlockSize[0] / 2, 0, parentBlockSize[2] / 2]
                     JointAxis = "0 1 1"
                 elif nextOccupied == 2:
                     # generate block in +y
@@ -350,11 +383,11 @@ class SOLUTION:
             elif parentJointFace == 4:
                 if nextOccupied == 0:
                     # generate block in +x
-                    position = [parentBlockSize[0]/2, 0, -parentBlockSize[2]/2]
+                    position = [parentBlockSize[0] / 2, 0, -parentBlockSize[2] / 2]
                     JointAxis = "0 1 1"
                 elif nextOccupied == 1:
                     # generate block in -x
-                    position = [-parentBlockSize[0]/2, 0, -parentBlockSize[2]/2]
+                    position = [-parentBlockSize[0] / 2, 0, -parentBlockSize[2] / 2]
                     JointAxis = "0 1 1"
                 elif nextOccupied == 2:
                     # generate block in +y
@@ -416,6 +449,7 @@ class SOLUTION:
             return [0, 0, -size[2] / 2]
 
     def Create_Brain(self, segmentCount):
+        self.motorJoints = []
         pyrosim.Start_NeuralNetwork("brain" + str(self.ID) + ".nndf")
         # let's set a minimum probability
         motorProbability = random.random()
@@ -435,6 +469,7 @@ class SOLUTION:
             if random.random() < motorProbability:
                 # add the sensor
                 pyrosim.Send_Motor_Neuron(name=sensorCount + motorCount, jointName=self.joints[i])
+                self.motorJoints.append(self.joints[i])
                 motorCount += 1
         # set self.weights here now
         self.numMotors = motorCount
@@ -444,6 +479,23 @@ class SOLUTION:
             for j in range(motorCount):  # current column
                 pyrosim.Send_Synapse(sourceNeuronName=i, targetNeuronName=j + sensorCount,
                                      weight=self.weights[i][j])
-        print("sensor count:", self.numSensors)
-        print("motor count:", self.numMotors)
+        # print("sensor count:", self.numSensors)
+        # print("motor count:", self.numMotors)
+        pyrosim.End()
+
+    def Create_Brain_From_Existing(self):
+        pyrosim.Start_NeuralNetwork("brain" + str(self.ID) + ".nndf")
+        sensorCount = 0
+        motorCount = 0
+        for i in self.sensorBlocks:
+            pyrosim.Send_Sensor_Neuron(name=sensorCount, linkName=str(i))
+            sensorCount += 1
+        for i in self.motorJoints:
+            pyrosim.Send_Motor_Neuron(name=sensorCount + motorCount, jointName=i)
+            motorCount += 1
+
+        for i in range(sensorCount):  # current row
+            for j in range(motorCount):  # current column
+                pyrosim.Send_Synapse(sourceNeuronName=i, targetNeuronName=j + sensorCount,
+                                     weight=self.weights[i][j])
         pyrosim.End()
