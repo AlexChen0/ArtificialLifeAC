@@ -49,7 +49,7 @@ class ROBOT:
 
     def Get_Fitness(self):
         stateOfLinkZero = p.getLinkState(self.robotId, 0)
-        xposLinkZero = stateOfLinkZero[0][0]
+        xposLinkZero = stateOfLinkZero[0][0] * -1
         f = open("tmp" + str(self.targetID) + ".txt", "w")
         f.write(str(xposLinkZero))
         f.close()

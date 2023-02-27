@@ -29,6 +29,17 @@ Once the sensors are complete, motors can be generated for the joints that were 
 for each of the joints, we decide randomly which gets a motor placed. Finally, the array of sensors and motors get a designated value
 chosen at random for the amount of weight assigned. Thus, the brain is complete. 
 
+# HOW CREATURE BODIES ARE MODIFIED
+Mutation can affect a body in one of two ways: addition of a link or deletion of a link. 
+
+Addition of a link works identical to creature generation. Random cubes are selected until finally one is found with favorable spawning conditions (see diagram below).
+Afterwards, the new cube is added, relevant data is saved for spawning purposes, and the simulation continues.
+
+Deletion is more interesting. To do so, "leaf" joints/cubes are kept track of in order to only remove cubes that aren't parents to other cubes (as this would crash the program).
+After a random leaf cube is selected, the corresponding joint is removed, and all relevant information about the cube is deleted. 
+
+Moving one cube was originally going to be a feature, but that is equivalent to addition followed by deletion. This is thus deemed unnecessary.
+
 #SOURCES
 All information for setting up the bots was found in the reddit ludobots instructions starting here:
 
@@ -36,17 +47,25 @@ https://www.reddit.com/r/ludobots/wiki/installation/
 
 #IMPROVING COLLISIONS
 One of the main issues in previous editions of creating 3D creatues was many blocks having intersections with each other.
-This would create a jumbled mess, and adversely affected the creature's ability to move. 
-To minimize this possibility, additional space was created between each of the squares made (offsets for position were adjusted).
-Though it should be mentioned that by assignment 8, I am playing around with an idea of checking relative space of a creature, which should really minimize collisions.
-The way this would work is we start by declaring the initial BodyCube at (0,0,0). If something builds on the +x side, we call the next cube at (1, 0, 0)
-If something builds off -y of the second cube, it is at space (1, -1, 0), and so on. This allows checking of relative space to ensure that cubes do not try to go in spaces occupied by previous cubes
+Therefore, I introduce the idea of "relative space" which is best looked at through induction. In our base case, we send in a first cube with a defined relative position of (0,0,0).
+
+In our k+1 case, we look at the potential spaces we place our cube (on which face of the parent cube) and we say that, for example, if a parent cube is at relative space (x, y, z) and we 
+spawn the new cube on the +x surface, then the child cube has relative space (x+1, y, z). 
+
+This significantly speeds up the creation and generation process for cubes, as a problem that typically costs O(n^2) (volume collision checking) is reduced to O(n) (checking if a value is in a list).
+The accuracy does not go down significantly except in the event of extreme cubes (pancake cubes or tower cubes) spawning next to each other, which is inherently unlikely.
 
 #MORPHOSPACE
 Technically, all bodies are possible. This generates a 3D random branching of limbs, so it can theoretically evolve in an infinite manner of ways. 
-Brains are a similar idea. The generation of sensors and motors is at random, meaning that once hillclimbing is reintroduced, it will be able 
-to generate any type of favorable brain condition. Similarly, all sensors can affect all motors, as this amount is random too. 
+Brains are a similar idea. The generation of sensors and motors is at random, which can generate all random neural networks within physical constraints.
+Similarly, all sensors can affect all motors, as this amount is random too. 
 
 #DIAGRAM
-A diagram can be found below, once I figure out how to do that. 
-![alt text](https://github.com/AlexChen0/ArtificialLifeAC/blob/main/3DCreatureLogic.png)
+An important note about the diagram: Since states within solution objects are saved, evolutions are changes to the solution state, and then 
+only afterwards is object data sent to pyrosim. Therefore, Evolution in the diagram is covered in "addition of cube" and "deletion of cube" and "mutation modification of weight" sections of the diagram. 
+Note, however, "addition of cube" also serves as the k+1 step of creating creatures, however it would be inappropriate to differentiate the two addition functions, since they are the same.
+![alt text](https://github.com/AlexChen0/ArtificialLifeAC/blob/main/3DCreatureLogic.jpg)
+
+#FITNESS GRAPH OVER TIME
+This fitness graph shows the evolution of 5 seeds of creature over 20 generations. 
+![alt text](https://github.com/AlexChen0/ArtificialLifeAC/blob/main/FitnessFunctions.png)

@@ -27,6 +27,7 @@ class SOLUTION:
         self.relPositions = []
         self.jointArgs = []
         self.motorJoints = []
+        self.leafIndicies = []
         # print(self.weights)
 
     def Set_ID(self, ID):
@@ -51,7 +52,7 @@ class SOLUTION:
         os.system("rm fitness" + str(self.ID) + ".txt")
 
     def Mutate(self):
-        # let's say 33% add new link, 33% modify link, 33% modify weight
+        # let's say 25% add new link, 25% modify link, 25% delete link, 25% modify weight
         decision = random.randrange(1, 3)
         sizeX = random.random() * .8 + .2
         sizeY = random.random() * .8 + .2
@@ -82,7 +83,7 @@ class SOLUTION:
                         relPosCheck = self.calculateRelativePosition(targetParentCube, j)
                         if relPosCheck in self.relPositions:
                             openIndicies.remove(j)
-                        if relPosCheck[2] < -3:
+                        elif relPosCheck[2] < -3 or relPosCheck[2] > 4:
                             openIndicies.remove(j)
                     # now if there's still possible areas to add links, we accept this block
                     if len(openIndicies) > 0:
@@ -90,6 +91,7 @@ class SOLUTION:
             nextOccupied = random.choice(openIndicies)
             # need to calc new relative position
             newRelPos = self.calculateRelativePosition(targetParentCube, nextOccupied)
+            self.relPositions.append(newRelPos)
             pos, jA = self.createJointArgument([sizeX, sizeY, sizeZ], targetParentCube,
                                                self.blocks[targetParentCube].size,
                                                self.blocks[targetParentCube].parentJointFace, nextOccupied)
@@ -109,34 +111,134 @@ class SOLUTION:
                                             relPos=newRelPos, parentJointPos=pos, parentJointFace=nextJointFace,
                                             s1='<material name="Cyan">', s2='    <color rgba="0 1.0 1.0 1.0"/>'))
             self.blocks[newindex].setOccupied(nextOccupied - 1 if nextOccupied % 2 == 1 else nextOccupied + 1)
+            # now let's see if this should be a motor neuron
+            motorProbability = .55
+            if random.random() < motorProbability:
+                self.motorJoints.append(self.joints[-1])
+        # elif decision == 3:
+        #     # swap one block to another area
+        #     # we choose the safe way -> choose a leaf block/joint, and edit from there
+        #     # things needed to be changed: new joint on new parent, remove old joint. Block stays the same
+        #     theLeaf = random.choice(self.leafIndicies)
+        #     # target swap block index gotten. Now need to find new position AND the old joint to remove
+        #     # let's remove the old joint first
+        #     takenIndex = 0
+        #     for i in range(len(self.blocks[theLeaf].occupied)):
+        #         if self.blocks[theLeaf].occupied[i] == 1:
+        #             takenIndex = i
+        #             break
+        #     for i in self.relPositions:
+        #         if i == self.blocks[theLeaf].relPosition:
+        #             self.relPositions.remove(i)
+        #     theIndextoFree = takenIndex - 1 if takenIndex % 2 == 1 else takenIndex + 1
+        #     self.blocks[theLeaf].setAllUnoccupied()
+        #     # now we look through joints and jointArgs
+        #     # we should definitely save the old parent
+        #     oldJointName = ""
+        #     for i in self.joints:
+        #         if i.partition("_")[2] == str(theLeaf):
+        #             oldJointName = i
+        #             self.joints.remove(i)
+        #     for i in self.jointArgs:
+        #         if i.child == str(theLeaf):
+        #             # we need to free the spot taken on the parent
+        #             self.blocks[int(i.parent)].setUnoccupied(theIndextoFree)
+        #             self.jointArgs.remove(i)
+        #     needToUpdateMotorJoints = False
+        #     if oldJointName in self.motorJoints:
+        #         self.motorJoints.remove(oldJointName)
+        #         needToUpdateMotorJoints = True
+        #     while True:
+        #         targetParentCube = random.randint(0, len(self.blocks) - 1)
+        #         # now we can check the occupation
+        #         if self.blocks[targetParentCube].occupied != [1, 1, 1, 1, 1, 1]:
+        #             openIndicies = [i for i in range(len(self.blocks[targetParentCube].occupied))
+        #                             if self.blocks[targetParentCube].occupied[i] == 0]
+        #             for j in openIndicies:
+        #                 # we need to now see if the index has what number,
+        #                 # and then compare to prev blocks relative position
+        #                 relPosCheck = self.calculateRelativePosition(targetParentCube, j)
+        #                 if relPosCheck in self.relPositions:
+        #                     openIndicies.remove(j)
+        #                 elif relPosCheck[2] < -3:
+        #                     openIndicies.remove(j)
+        #             # now if there's still possible areas to add links, we accept this block
+        #             if len(openIndicies) > 0 and targetParentCube != theLeaf:
+        #                 break
+        #     nextOccupied = random.choice(openIndicies)
+        #     newRelPos = self.calculateRelativePosition(targetParentCube, nextOccupied)
+        #     self.relPositions.append(newRelPos)
+        #     pos, jA = self.createJointArgument(self.blocks[theLeaf].size, targetParentCube,
+        #                                        self.blocks[targetParentCube].size,
+        #                                        self.blocks[targetParentCube].parentJointFace, nextOccupied)
+        #     self.blocks[targetParentCube].setOccupied(nextOccupied)
+        #     JointName = str(targetParentCube) + "_" + str(newindex)
+        #     self.joints.append(JointName)
+        #     self.jointArgs.append(jointArg(name=JointName, parent=str(targetParentCube),
+        #                                    child=str(newindex), position=pos, jointAxis=jA))
+        #     relativePos = self.createPositionalArgument(nextOccupied, [sizeX, sizeY, sizeZ])
+        #     nextJointFace = nextOccupied - 1 if nextOccupied % 2 == 1 else nextOccupied + 1
+        #     self.blocks[theLeaf].setPosition(relativePos)
+        #     self.blocks[theLeaf].setRelPos(newRelPos)
+        #     self.blocks[theLeaf].setParentJointFace(nextJointFace)
+        #     self.blocks[theLeaf].setParentJointPos(pos)
+        #     self.blocks[theLeaf].setOccupied(nextOccupied - 1 if nextOccupied % 2 == 1 else nextOccupied + 1)
+        #     if needToUpdateMotorJoints:
+        #         self.motorJoints.append(JointName)
         else:
-            # swap one block to another area
-            # this can be tricky. very tricky.
-            pass
-
+            # deletion strategy: similar to modify except find the leaf, delete it. Adjust other values as necessary.
+            theLeaf = random.choice(self.leafIndicies)
+            takenIndex = 0
+            indexOfLeafinBlocks = -1
+            for i in self.blocks:
+                if i.name == str(theLeaf):
+                    indexOfLeafinBlocks = self.blocks.index(i)
+                    self.relPositions.remove(self.blocks[indexOfLeafinBlocks].relPosition)
+                    break
+            for i in range(len(self.blocks[indexOfLeafinBlocks].occupied)):
+                if self.blocks[indexOfLeafinBlocks].occupied[i] == 1:
+                    takenIndex = i
+                    break
+            theIndextoFree = takenIndex - 1 if takenIndex % 2 == 1 else takenIndex + 1
+            self.blocks[indexOfLeafinBlocks].setAllUnoccupied()
+            # now we look through joints and jointArgs
+            oldJointName = ""
+            for i in self.joints:
+                if i.partition("_")[2] == str(theLeaf):
+                    oldJointName = i
+                    self.joints.remove(i)
+            for i in self.jointArgs:
+                if i.child == str(theLeaf):
+                    # we need to free the spot taken on the parent
+                    self.blocks[int(i.parent)].setUnoccupied(theIndextoFree)
+                    if sum(self.blocks[int(i.parent)].occupied) == 1:
+                        self.leafIndicies.append(int(i.parent))
+                    self.jointArgs.remove(i)
+            if theLeaf in self.sensorBlocks:
+                self.sensorBlocks.remove(theLeaf)
+                self.numSensors -= 1
+            if oldJointName in self.motorJoints:
+                self.motorJoints.remove(oldJointName)
+                self.numMotors -= 1
+            self.numSegments -= 1
+            self.leafIndicies.remove(theLeaf)
+            self.blocks.pop(indexOfLeafinBlocks)
 
 
     def Create_World(self):
-        length = 1
-        width = 1
-        height = 1
-        x = -2
-        y = 2
-        z = 0.5
         pyrosim.Start_SDF("world.sdf")
-        pyrosim.Send_Cube(name="Box", pos=[x, y, z], size=[length, width, height], s1='<material name="Cyan">',
-                          s2='    <color rgba="0 1.0 1.0 1.0"/>')
         pyrosim.End()
 
     def Create_Body(self):
         # completely new body assembled if there is no parameter
-        self.numSegments = random.randint(8, 15)
+        self.numSegments = random.randint(6, 10)
         sensorProbability = .65
         self.sensorBlocks = []
         self.joints = []
         self.blocks = []
         self.relPositions = []
         self.jointArgs = []
+        self.leafIndicies = []
         for i in range(self.numSegments):
             if random.random() < sensorProbability:
                 self.sensorBlocks.append(i)
@@ -158,23 +260,15 @@ class SOLUTION:
                     self.blocks.append(BodyCube(name=str(i), position=[0, 0, 2 + sizeZ / 2], size=[sizeX, sizeY, sizeZ],
                                                 relPos=[0, 0, 0], parentJointPos=[0, 0, 2], parentJointFace=6,
                                                 s1='<material name="Green">', s2='    <color rgba="0 1.0 0.0 1.0"/>'))
-                    # pyrosim.Send_Cube(name=str(i), pos=[0, 0, 2 + sizeZ / 2], size=[sizeX, sizeY, sizeZ],
-                    #                   s1='<material name="Green">', s2='    <color rgba="0 1.0 0.0 1.0"/>')
                 else:
                     self.relPositions.append([0, 0, 0])
                     self.blocks.append(BodyCube(name=str(i), position=[0, 0, 2 + sizeZ / 2], size=[sizeX, sizeY, sizeZ],
                                                 relPos=[0, 0, 0], parentJointPos=[0, 0, 2], parentJointFace=6,
                                                 s1='<material name="Cyan">', s2='    <color rgba="0 1.0 1.0 1.0"/>'))
-                    # pyrosim.Send_Cube(name=str(i), pos=[0, 0, 2 + sizeZ / 2], size=[sizeX, sizeY, sizeZ],
-                    #                   s1='<material name="Cyan">', s2='    <color rgba="0 1.0 1.0 1.0"/>')
+                self.leafIndicies.append(i)
             else:
                 # in the middle and for the last
-                # position should be 0 0 0 thanks to joint stuff already figured out
-                # that said we need to figure out from the next target block where to assemble this one
-                # joints do not need to be tracked by BodyCube, since they are guaranteed between 2 cubes
-                # that said, now we need to decide which is the next segment that will be occupied
-                # therefore, we no longer calculate where the joint is here, and we do it before calling cubes
-                # but watch out: we need to figure out where the next cube goes too -- who's the parent?
+                # we need to figure out where the next cube goes too -- who's the parent?
                 while True:
                     targetParentCube = random.randint(0, len(self.blocks) - 1)
                     # now we can check the occupation
@@ -187,7 +281,7 @@ class SOLUTION:
                             relPosCheck = self.calculateRelativePosition(targetParentCube, j)
                             if relPosCheck in self.relPositions:
                                 openIndicies.remove(j)
-                            if relPosCheck[2] < -3:
+                            elif relPosCheck[2] < -3 or relPosCheck[2] > 4:
                                 openIndicies.remove(j)
                         # now if there's still possible areas to add links, we accept this block
                         if len(openIndicies) > 0:
@@ -195,6 +289,7 @@ class SOLUTION:
                 nextOccupied = random.choice(openIndicies)
                 # need to calc new relative position
                 newRelPos = self.calculateRelativePosition(targetParentCube, nextOccupied)
+                self.relPositions.append(newRelPos)
                 pos, jA = self.createJointArgument([sizeX, sizeY, sizeZ], targetParentCube,
                                                    self.blocks[targetParentCube].size,
                                                    self.blocks[targetParentCube].parentJointFace, nextOccupied)
@@ -229,6 +324,9 @@ class SOLUTION:
                 # how do we do this?
                 # if nextOccupied is odd -> attributes to 1, 3, 5 -> 0, 2, 4 respectively
                 # if nextOccupied is even -> attributes to 0, 2, 4 -> 1, 3, 5. this line should do:
+                if targetParentCube in self.leafIndicies:
+                    self.leafIndicies.remove(targetParentCube)
+                self.leafIndicies.append(i)
                 self.blocks[i].setOccupied(nextOccupied - 1 if nextOccupied % 2 == 1 else nextOccupied + 1)
                 # a very large weights array is already synthesized, so there is no need to make new weights
 

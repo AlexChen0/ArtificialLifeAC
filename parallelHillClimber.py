@@ -4,6 +4,7 @@ import solution
 import constants as c
 import copy
 import os
+import matplotlib.pyplot as plt
 
 
 class PARALLEL_HILL_CLIMBER:
@@ -13,22 +14,27 @@ class PARALLEL_HILL_CLIMBER:
         self.parents = {}
         self.children = {}
         self.nextID = 0
+        self.graphVals = {}
         for i in range(c.populationSize):
             self.parents[i] = solution.SOLUTION(self.nextID)
             self.nextID += 1
+            self.graphVals[i] = []
 
     # To the instructor and creator of ludobots, if you're reading this, your ludobots
     # instructions are fucking garbage.
     def Evolve(self):
-        self.Evaluate(self.parents)
+        self.Evaluate(self.parents, "GUI")
         for j in range(c.numGenerations):
             # self.parent.Evaluate("DIRECT")
-            self.Evolve_For_One_Generation()
+            self.Evolve_For_One_Generation(j)
 
-    def Evolve_For_One_Generation(self):
+    def Evolve_For_One_Generation(self, generation):
         self.Spawn()
         self.Mutate()
-        self.Evaluate(self.children)
+        if generation == 0:
+            self.Evaluate(self.children, "DIRECT")
+        else:
+            self.Evaluate(self.children, "DIRECT")
         # self.Print()
         print("new generation")
         self.Select()
@@ -43,16 +49,17 @@ class PARALLEL_HILL_CLIMBER:
         for i in self.children.keys():
             self.children[i].Mutate()
 
-    def Evaluate(self, solutions):
+    def Evaluate(self, solutions, typeOfSim):
         for i in range(c.populationSize):
-            solutions[i].Start_Simulation("GUI")
+            solutions[i].Start_Simulation(typeOfSim)
         for i in range(c.populationSize):
             solutions[i].Wait_For_Simulation_To_End()
 
     def Select(self):
         for i in self.parents.keys():
-            if self.parents[i].fitness > self.children[i].fitness:
+            if self.parents[i].fitness < self.children[i].fitness:
                 self.parents[i] = self.children[i]
+            self.graphVals[i].append(self.parents[i].fitness)
 
     def Show_Best(self):
         bestFitness = math.inf
@@ -62,6 +69,16 @@ class PARALLEL_HILL_CLIMBER:
                 bestFitness = self.parents[i].fitness
                 Best = self.parents[i]
         Best.Start_Simulation("GUI")
+        x = [i for i in range(0, c.numGenerations)]
+        for i in self.graphVals.keys():
+            print(x, self.graphVals[i])
+            plt.plot(x, self.graphVals[i], label="seed " + str(i + 1))
+        plt.legend()
+        plt.show()
+
+    def Show_All(self):
+        for i in self.parents.keys():
+            self.parents[i].Start_Simulation("GUI")
 
     def Print(self):
         print()
