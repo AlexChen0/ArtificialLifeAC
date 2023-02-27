@@ -40,12 +40,12 @@ After a random leaf cube is selected, the corresponding joint is removed, and al
 
 Moving one cube was originally going to be a feature, but that is equivalent to addition followed by deletion. This is thus deemed unnecessary.
 
-#SOURCES
+# SOURCES
 All information for setting up the bots was found in the reddit ludobots instructions starting here:
 
 https://www.reddit.com/r/ludobots/wiki/installation/
 
-#IMPROVING COLLISIONS
+# IMPROVING COLLISIONS
 One of the main issues in previous editions of creating 3D creatues was many blocks having intersections with each other.
 Therefore, I introduce the idea of "relative space" which is best looked at through induction. In our base case, we send in a first cube with a defined relative position of (0,0,0).
 
@@ -55,17 +55,17 @@ spawn the new cube on the +x surface, then the child cube has relative space (x+
 This significantly speeds up the creation and generation process for cubes, as a problem that typically costs O(n^2) (volume collision checking) is reduced to O(n) (checking if a value is in a list).
 The accuracy does not go down significantly except in the event of extreme cubes (pancake cubes or tower cubes) spawning next to each other, which is inherently unlikely.
 
-#MORPHOSPACE
+# MORPHOSPACE
 Technically, all bodies are possible. This generates a 3D random branching of limbs, so it can theoretically evolve in an infinite manner of ways. 
 Brains are a similar idea. The generation of sensors and motors is at random, which can generate all random neural networks within physical constraints.
 Similarly, all sensors can affect all motors, as this amount is random too. 
 
-#DIAGRAM
+# DIAGRAM
 An important note about the diagram: Since states within solution objects are saved, evolutions are changes to the solution state, and then 
 only afterwards is object data sent to pyrosim. Therefore, Evolution in the diagram is covered in "addition of cube" and "deletion of cube" and "mutation modification of weight" sections of the diagram. 
 Note, however, "addition of cube" also serves as the k+1 step of creating creatures, however it would be inappropriate to differentiate the two addition functions, since they are the same.
 ![alt text](https://github.com/AlexChen0/ArtificialLifeAC/blob/main/3DCreatureLogic.jpg)
 
-#FITNESS GRAPH OVER TIME
+# FITNESS GRAPH OVER TIME
 This fitness graph shows the evolution of 5 seeds of creature over 20 generations. 
 ![alt text](https://github.com/AlexChen0/ArtificialLifeAC/blob/main/FitnessFunctions.png)
