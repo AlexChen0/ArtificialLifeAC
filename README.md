@@ -62,6 +62,8 @@ Similarly, all sensors can affect all motors, as this amount is random too.
 
 # DIAGRAM
 An important note about the diagram: Since states within solution objects are saved, evolutions are changes to the solution state, and then only afterwards is object data sent to pyrosim. Therefore, Evolution in the diagram is covered in the k+1 case of the diagram, along with the brain modification section of the diagram. 
+
+There is also a note in the base case denoting the first block as "0 0 0". For more information, see the "improving collisions" section of the readme. 
 ![alt text](https://github.com/AlexChen0/ArtificialLifeAC/blob/main/DiagramWithPictures.jpg)
 
 # FITNESS GRAPH OVER TIME
