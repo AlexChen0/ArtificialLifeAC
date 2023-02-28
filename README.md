@@ -61,10 +61,8 @@ Brains are a similar idea. The generation of sensors and motors is at random, wh
 Similarly, all sensors can affect all motors, as this amount is random too. 
 
 # DIAGRAM
-An important note about the diagram: Since states within solution objects are saved, evolutions are changes to the solution state, and then 
-only afterwards is object data sent to pyrosim. Therefore, Evolution in the diagram is covered in "addition of cube" and "deletion of cube" and "mutation modification of weight" sections of the diagram. 
-Note, however, "addition of cube" also serves as the k+1 step of creating creatures, however it would be inappropriate to differentiate the two addition functions, since they are the same.
-![alt text](https://github.com/AlexChen0/ArtificialLifeAC/blob/main/3DCreatureLogic.jpg)
+An important note about the diagram: Since states within solution objects are saved, evolutions are changes to the solution state, and then only afterwards is object data sent to pyrosim. Therefore, Evolution in the diagram is covered in the k+1 case of the diagram, along with the brain modification section of the diagram. 
+![alt text](https://github.com/AlexChen0/ArtificialLifeAC/blob/main/DiagramWithPictures.jpg)
 
 # FITNESS GRAPH OVER TIME
 This fitness graph shows the evolution of 5 seeds of creature over 20 generations. 
