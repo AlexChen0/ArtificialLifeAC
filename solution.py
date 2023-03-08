@@ -34,8 +34,8 @@ class SOLUTION:
         self.ID = ID
 
     def Start_Simulation(self, DoG):
-        self.Create_World()
         if len(self.blocks) == 0:
+            self.Create_World()
             self.Create_Body()
             self.Create_Brain(self.numSegments)
         self.Create_Body_From_Existing()
@@ -53,7 +53,11 @@ class SOLUTION:
 
     def Mutate(self):
         # let's say 25% add new link, 25% modify link, 25% delete link, 25% modify weight
-        decision = random.randrange(1, 3)
+        if self.numSegments < 4:
+            # if too small -> don't delete.
+            decision = random.randrange(1, 2)
+        else:
+            decision = random.randrange(1, 3)
         sizeX = random.random() * .8 + .2
         sizeY = random.random() * .8 + .2
         sizeZ = random.random() * .8 + .2
@@ -83,7 +87,7 @@ class SOLUTION:
                         relPosCheck = self.calculateRelativePosition(targetParentCube, j)
                         if relPosCheck in self.relPositions:
                             openIndicies.remove(j)
-                        elif relPosCheck[2] < -3 or relPosCheck[2] > 4:
+                        elif relPosCheck[2] < -2 or relPosCheck[2] > 3 or relPosCheck[0] < -3:
                             openIndicies.remove(j)
                     # now if there's still possible areas to add links, we accept this block
                     if len(openIndicies) > 0:
@@ -115,76 +119,6 @@ class SOLUTION:
             motorProbability = .55
             if random.random() < motorProbability:
                 self.motorJoints.append(self.joints[-1])
-        # elif decision == 3:
-        #     # swap one block to another area
-        #     # we choose the safe way -> choose a leaf block/joint, and edit from there
-        #     # things needed to be changed: new joint on new parent, remove old joint. Block stays the same
-        #     theLeaf = random.choice(self.leafIndicies)
-        #     # target swap block index gotten. Now need to find new position AND the old joint to remove
-        #     # let's remove the old joint first
-        #     takenIndex = 0
-        #     for i in range(len(self.blocks[theLeaf].occupied)):
-        #         if self.blocks[theLeaf].occupied[i] == 1:
-        #             takenIndex = i
-        #             break
-        #     for i in self.relPositions:
-        #         if i == self.blocks[theLeaf].relPosition:
-        #             self.relPositions.remove(i)
-        #     theIndextoFree = takenIndex - 1 if takenIndex % 2 == 1 else takenIndex + 1
-        #     self.blocks[theLeaf].setAllUnoccupied()
-        #     # now we look through joints and jointArgs
-        #     # we should definitely save the old parent
-        #     oldJointName = ""
-        #     for i in self.joints:
-        #         if i.partition("_")[2] == str(theLeaf):
-        #             oldJointName = i
-        #             self.joints.remove(i)
-        #     for i in self.jointArgs:
-        #         if i.child == str(theLeaf):
-        #             # we need to free the spot taken on the parent
-        #             self.blocks[int(i.parent)].setUnoccupied(theIndextoFree)
-        #             self.jointArgs.remove(i)
-        #     needToUpdateMotorJoints = False
-        #     if oldJointName in self.motorJoints:
-        #         self.motorJoints.remove(oldJointName)
-        #         needToUpdateMotorJoints = True
-        #     while True:
-        #         targetParentCube = random.randint(0, len(self.blocks) - 1)
-        #         # now we can check the occupation
-        #         if self.blocks[targetParentCube].occupied != [1, 1, 1, 1, 1, 1]:
-        #             openIndicies = [i for i in range(len(self.blocks[targetParentCube].occupied))
-        #                             if self.blocks[targetParentCube].occupied[i] == 0]
-        #             for j in openIndicies:
-        #                 # we need to now see if the index has what number,
-        #                 # and then compare to prev blocks relative position
-        #                 relPosCheck = self.calculateRelativePosition(targetParentCube, j)
-        #                 if relPosCheck in self.relPositions:
-        #                     openIndicies.remove(j)
-        #                 elif relPosCheck[2] < -3:
-        #                     openIndicies.remove(j)
-        #             # now if there's still possible areas to add links, we accept this block
-        #             if len(openIndicies) > 0 and targetParentCube != theLeaf:
-        #                 break
-        #     nextOccupied = random.choice(openIndicies)
-        #     newRelPos = self.calculateRelativePosition(targetParentCube, nextOccupied)
-        #     self.relPositions.append(newRelPos)
-        #     pos, jA = self.createJointArgument(self.blocks[theLeaf].size, targetParentCube,
-        #                                        self.blocks[targetParentCube].size,
-        #                                        self.blocks[targetParentCube].parentJointFace, nextOccupied)
-        #     self.blocks[targetParentCube].setOccupied(nextOccupied)
-        #     JointName = str(targetParentCube) + "_" + str(newindex)
-        #     self.joints.append(JointName)
-        #     self.jointArgs.append(jointArg(name=JointName, parent=str(targetParentCube),
-        #                                    child=str(newindex), position=pos, jointAxis=jA))
-        #     relativePos = self.createPositionalArgument(nextOccupied, [sizeX, sizeY, sizeZ])
-        #     nextJointFace = nextOccupied - 1 if nextOccupied % 2 == 1 else nextOccupied + 1
-        #     self.blocks[theLeaf].setPosition(relativePos)
-        #     self.blocks[theLeaf].setRelPos(newRelPos)
-        #     self.blocks[theLeaf].setParentJointFace(nextJointFace)
-        #     self.blocks[theLeaf].setParentJointPos(pos)
-        #     self.blocks[theLeaf].setOccupied(nextOccupied - 1 if nextOccupied % 2 == 1 else nextOccupied + 1)
-        #     if needToUpdateMotorJoints:
-        #         self.motorJoints.append(JointName)
         else:
             # deletion strategy: similar to modify except find the leaf, delete it. Adjust other values as necessary.
             theLeaf = random.choice(self.leafIndicies)
@@ -281,7 +215,9 @@ class SOLUTION:
                             relPosCheck = self.calculateRelativePosition(targetParentCube, j)
                             if relPosCheck in self.relPositions:
                                 openIndicies.remove(j)
-                            elif relPosCheck[2] < -3 or relPosCheck[2] > 4:
+                            elif relPosCheck[2] < -2 or relPosCheck[2] > 3 or relPosCheck[0] < -3:
+                                # relPosCheck[0] assessment assures that the final bot isnt just a nonmoving,
+                                # really long snake
                                 openIndicies.remove(j)
                         # now if there's still possible areas to add links, we accept this block
                         if len(openIndicies) > 0:

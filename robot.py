@@ -14,12 +14,20 @@ class ROBOT:
         self.sensors = {}
         self.motors = {}
         self.robotId = p.loadURDF("body" + str(targetID) + ".urdf", flags=p.URDF_USE_SELF_COLLISION + p.URDF_USE_SELF_COLLISION_EXCLUDE_PARENT)
-        os.system("rm body" + str(targetID) + ".urdf")
+        try:
+            os.system("rm body" + str(targetID) + ".urdf")
+        except:
+            print("no body urdf?")
+            pass
         pyrosim.Prepare_To_Simulate(self.robotId)
         self.Prepare_To_Sense()
         self.Prepare_To_Act()
         self.nn = NEURAL_NETWORK("brain" + str(targetID) + ".nndf")
-        os.system("rm brain" + str(targetID) + ".nndf")
+        try:
+            os.system("rm brain" + str(targetID) + ".nndf")
+        except:
+            print("no brain nndf?")
+            pass
 
     def Prepare_To_Sense(self):
         for linkName in pyrosim.linkNamesToIndices:

@@ -23,7 +23,10 @@ class PARALLEL_HILL_CLIMBER:
     # To the instructor and creator of ludobots, if you're reading this, your ludobots
     # instructions are fucking garbage.
     def Evolve(self):
-        self.Evaluate(self.parents, "GUI")
+        if self.nextID == 0:
+            self.Evaluate(self.parents, "GUI")
+        else:
+            self.Evaluate(self.parents, "DIRECT")
         for j in range(c.numGenerations):
             # self.parent.Evaluate("DIRECT")
             self.Evolve_For_One_Generation(j)
@@ -36,7 +39,7 @@ class PARALLEL_HILL_CLIMBER:
         else:
             self.Evaluate(self.children, "DIRECT")
         # self.Print()
-        print("new generation")
+        print("new generation count: ", generation)
         self.Select()
 
     def Spawn(self):
