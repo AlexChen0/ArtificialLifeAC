@@ -3,69 +3,79 @@ simply navigate to this directory and use the command:
 
 python3 main.py
 
-# HOW THE CREATURES ARE GENERATED
-At the start of generation, the number of boxes that will be generated is determined.
-Afterwards, the program iterates through the boxes to decide which boxes will have sensors. 
-Sensors are stored in self.sensors for ease of tracking and recollection. 
+# A NOTE ON EXTRA "NEAT VIDEOS AND GRAPHS"
+This readme has one graph of the final results, and no videos. For the host of videos and graphs, see the
+artificialLifeFinalProjectStuff directory, where its subdirectories are marked to indicate graphs and videos.
 
-Once these boxes have been determined, the program first lays down the initial box, in the center of the plane. 
-These boxes are kept track of within the BodyCube class, which stores position, size, and which faces of the cube are "open"
+# METHODS -- CREATION, MUTATION, SELECTION, EVOLUTION
+The simulation operates on Parallel Hill Climbing. This is to say that a lot of robots are created, then they are mutated, then the best ones are selected, and then all future robots evolve from there.
 
-The remaining cubes are created in the following way: the program finds a cube that has an open face, selects one of the open faces on 
-the cube, and "builds" a new cube on that face. The respective faces of the cubes are then marked as occupied in their separate BodyCube,
-and a joint is created with regard to the relative position of the cube and the face being used. 
+The following diagram shows a basic example of robot creation:
 
-the joints are then stored in self.joints for ease of tracking and recollection
+![alt text](https://github.com/AlexChen0/ArtificialLifeAC/blob/main/BodyBrainGen.jpg)
 
-Once the last joint and cube are laid onto the body, the program ends creation of the body.
+This is to say that a robot first begins as a lone block. Afterwards, the computer decides how many segments the robot should have, and for each segment which ones should have sensors, and which joints should have motors. 
+For each new block, a face of an existing block is chosen that does not have a block already attached to it. Once this is selected, then a joint is made, and the cube is made afterwards. This is all done completely randomly
 
-# HOW THE CREATURE BRAINS ARE GENERATED
-Once the bodies have been generated, brains can now be generated to fit them. 
+Brains are then generated from a mapping of sensors to motors. Each sensor has a corresponding weight to each motor, meaning that individual weights can be allocated and changed. 
+Since all the sensors and motors are already determined in body generation, this data is fetched from storage, and used to generate the brain. No further work is necessary.
 
-Since the number of segments are being kept track of, and we know the collection of which parts have sensors, we continue by sending
-sensor neurons for each of the blocks that have been designated for sensors. 
+At each stage of parallel hill climbing, mutations are made from the parents to the children. The following diagram shows the possibilities of mutation:
 
-Once the sensors are complete, motors can be generated for the joints that were created from the body. We look in self.joints and 
-for each of the joints, we decide randomly which gets a motor placed. Finally, the array of sensors and motors get a designated value
-chosen at random for the amount of weight assigned. Thus, the brain is complete. 
+![alt text](https://github.com/AlexChen0/ArtificialLifeAC/blob/main/BodyBrainMutation.jpg)
 
-# HOW CREATURE BODIES ARE MODIFIED
-Mutation can affect a body in one of two ways: addition of a link or deletion of a link. 
+Mutations can take one of three forms: adding a block, removing a block, or changing a weight. Adding a block happens identically to body creation, and removing a block simply removes a block and its associated joint. 
+Though there is an additional caveat: The only blocks that can be removed are blocks that are not parents of any joints. Finally, changing weights is done by directly changing the array of weights randomly as well.
 
-Addition of a link works identical to creature generation. Random cubes are selected until finally one is found with favorable spawning conditions (see diagram below).
-Afterwards, the new cube is added, relevant data is saved for spawning purposes, and the simulation continues.
+Finally, Selection and Evolution work in the following way: 
 
-Deletion is more interesting. To do so, "leaf" joints/cubes are kept track of in order to only remove cubes that aren't parents to other cubes (as this would crash the program).
-After a random leaf cube is selected, the corresponding joint is removed, and all relevant information about the cube is deleted. 
+![alt text](https://github.com/AlexChen0/ArtificialLifeAC/blob/main/SelectionEvolution.jpg)
 
-Moving one cube was originally going to be a feature, but that is equivalent to addition followed by deletion. This is thus deemed unnecessary.
+This is where we introduce the concept of fitness. For a mutation to evolve into the robot lineage, it must be "more successful" than other creatures, AND more successful than the parent. 
+Therefore, I define fitness to mean the amount a robot can move, within a roughly 10 second time period (translating to 1500 simulation steps), in a direction away from the camera.
+This serves to favor creatures that have steady movement over creatures that take one leap and fail briefly afterwards. 
+
+The fitness, then, can be easily tracked by finding the location of the robot at the final step. If the fitness qualifies as above, then the mutation is successful, and incorporated into all future generations. At this point, the creature has evolved. 
+
+# METHODS-- HOW THE CODE WORKS
+The call to main.py runs a call to search.py (technically, you can just run search.py, but main.py is the "standard"), 
+which then sets up the parallel hill climbing logic that the code uses. Search.py instantiates a parallelHillClimber, 
+which is simply instructed to "evolve". When it does so, it first creates parents to begin the evolution, with all parents being a "solution" object, in solution.py.
+
+These parents store a lot of data, which serves as a representation of "genetic code" for the parent that can mutate over time. To keep things brief, 
+each parent at their core store their list of sensor blocks, nonsensor blocks, and motor joints, and the instructions for how sensitive each motor is to each sensor. 
+The remainder of information stored is logistical, and serves as information to speed up the process of creating bots. 
+
+The code itself sacrifices perfect accuracy for approximations, with rare instances of not-great performance, typically when large blocks and tiny blocks
+are next to each other. This allows generations to run very, very fast (with all 50,000 sims being run within 2.5 hours). Robots are approximated, their data stored,
+and finally sent to pyrosim to construct the actual bots in simulation. 
+
+This is where simulation.py and simulate.py come in. As the name suggests, they operate the robot and the world that are stored, and with all the pyrosim data already available,
+the robot data is passed to robot.py, which then passes logic to motor.py and sensor.py. Once the simulation is complete, robot.py returns the fitness data, which gets propagated back up the chain 
+to the parallelhillclimber, so the next evolution step can happen. 
 
 # SOURCES
 All information for setting up the bots was found in the reddit ludobots instructions starting here:
 
 https://www.reddit.com/r/ludobots/wiki/installation/
 
-# IMPROVING COLLISIONS
-One of the main issues in previous editions of creating 3D creatues was many blocks having intersections with each other.
-Therefore, I introduce the idea of "relative space" which is best looked at through induction. In our base case, we send in a first cube with a defined relative position of (0,0,0).
+# RESULTS
+Parallel hill climbing works. If nothing else, this diagram essentially acts as a TL:DR of the entire results section:
 
-In our k+1 case, we look at the potential spaces we place our cube (on which face of the parent cube) and we say that, for example, if a parent cube is at relative space (x, y, z) and we 
-spawn the new cube on the +x surface, then the child cube has relative space (x+1, y, z). 
+![alt text](https://github.com/AlexChen0/ArtificialLifeAC/blob/main/artificialLifeFinalProjectStuff/AllGraphs/run20.png)
 
-This significantly speeds up the creation and generation process for cubes, as a problem that typically costs O(n^2) (volume collision checking) is reduced to O(n) (checking if a value is in a list).
-The accuracy does not go down significantly except in the event of extreme cubes (pancake cubes or tower cubes) spawning next to each other, which is inherently unlikely.
+This plot shows evolution of 10 creatures in a random seed, that occur through 250 generations (for all the graphs, see the final project directory, and the AllGraphs subdirectory). 
+Similarly, a before/after can be found in the final project directory of this project, labeled "Teaser.mp4"
 
-# MORPHOSPACE
-Technically, all bodies are possible. This generates a 3D random branching of limbs, so it can theoretically evolve in an infinite manner of ways. 
-Brains are a similar idea. The generation of sensors and motors is at random, which can generate all random neural networks within physical constraints.
-Similarly, all sensors can affect all motors, as this amount is random too. 
+At a high level, the bodies looked nothing like what they began as, and evolution often happened several times within each robot in a given seed, though never happened 
+from one generation to the next. And from this, robots found all different kinds of ways to move away from the camera: some fidgeted away, 
+others rotated to get away, some were able to crawl using a pseudo-leg, and finally one was even able to cartwheel. 
 
-# DIAGRAM
-An important note about the diagram: Since states within solution objects are saved, evolutions are changes to the solution state, and then only afterwards is object data sent to pyrosim. Therefore, Evolution in the diagram is covered in the k+1 case of the diagram, along with the brain modification section of the diagram. 
+However, evolution did get stuck. And it got stuck quite a bit. Bad seeds result in failed robots, ones where despite evolution taking place, did not end up 
+too much better than the original. These robots appeared to have the body parts in place to succeed, but likely did not have the brain to do so. 
 
-There is also a note in the base case denoting the first block as "0 0 0". For more information, see the "improving collisions" section of the readme. 
-![alt text](https://github.com/AlexChen0/ArtificialLifeAC/blob/main/DiagramWithPictures.jpg)
+This makes sense in a lot of ways. Evolution of a new block can only go on a limited number of places, and each area a new block 
+can spawn can be vastly different depending on the weights it has placed from the various sensors. Therefore, finding the right mix 
+of sensors is nearly impossible.
 
-# FITNESS GRAPH OVER TIME
-This fitness graph shows the evolution of 5 seeds of creature over 20 generations. 
-![alt text](https://github.com/AlexChen0/ArtificialLifeAC/blob/main/FitnessFunctions.png)
+That being said, successes also happened a lot, and for that reason additional generations did not appear to be needed. 

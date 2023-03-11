@@ -72,6 +72,9 @@ class PARALLEL_HILL_CLIMBER:
                 bestFitness = self.parents[i].fitness
                 Best = self.parents[i]
         Best.Start_Simulation("GUI")
+        # this should save the best robot's body and brain
+        Best.CreateBodyFromExisting()
+        Best.CreateBrainFromExisting()
         x = [i for i in range(0, c.numGenerations)]
         for i in self.graphVals.keys():
             print(x, self.graphVals[i])
