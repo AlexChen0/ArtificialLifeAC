@@ -3,6 +3,15 @@ simply navigate to this directory and use the command:
 
 python3 main.py
 
+# VIDEO LINKS
+Note: I mistakenly had a > and < swapped for the entirety of the 50k sims. So if you run the robot, most of em actually end up like this:
+
+An excellent robot: https://youtu.be/xtETCiprSBk
+
+That said, here's the trailer: https://youtu.be/XcUJ9kByjus
+
+Full video: https://youtu.be/mbgcQWo6jlU
+
 # A NOTE ON EXTRA "NEAT VIDEOS AND GRAPHS"
 This readme has one graph of the final results, and no videos. For the host of videos and graphs, see the
 artificialLifeFinalProjectStuff directory, where its subdirectories are marked to indicate graphs and videos.
