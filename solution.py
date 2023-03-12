@@ -20,7 +20,7 @@ class SOLUTION:
         self.numSegments = -1
         self.sensorBlocks = []
         self.weights = self.weights * 2 - 1
-        self.fitness = math.inf
+        self.fitness = -math.inf
         self.ID = ID
         self.blocks = []
         self.joints = []

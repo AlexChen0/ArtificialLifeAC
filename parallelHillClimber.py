@@ -65,22 +65,22 @@ class PARALLEL_HILL_CLIMBER:
             self.graphVals[i].append(self.parents[i].fitness)
 
     def Show_Best(self):
-        bestFitness = math.inf
+        bestFitness = -math.inf
         Best = None
         for i in self.parents.keys():
-            if self.parents[i].fitness < bestFitness:
+            if self.parents[i].fitness > bestFitness:
                 bestFitness = self.parents[i].fitness
                 Best = self.parents[i]
         Best.Start_Simulation("GUI")
-        # this should save the best robot's body and brain
-        Best.CreateBodyFromExisting()
-        Best.CreateBrainFromExisting()
         x = [i for i in range(0, c.numGenerations)]
         for i in self.graphVals.keys():
             print(x, self.graphVals[i])
             plt.plot(x, self.graphVals[i], label="seed " + str(i + 1))
         plt.legend()
         plt.show()
+        # this should save the best robot's body and brain
+        Best.Create_Body_From_Existing()
+        Best.Create_Brain_From_Existing()
 
     def Show_All(self):
         for i in self.parents.keys():
