@@ -4,17 +4,15 @@ simply navigate to this directory and use the command:
 python3 main.py
 
 # VIDEO LINKS
-Note: I mistakenly had a > and < swapped for the entirety of the 50k sims. So if you run the robot, most of em actually end up like this:
-
-An excellent robot: https://youtu.be/xtETCiprSBk
-
-That said, here's the trailer: https://youtu.be/XcUJ9kByjus
+Trailer: https://youtu.be/XcUJ9kByjus
 
 Full video: https://youtu.be/mbgcQWo6jlU
 
 # A NOTE ON EXTRA "NEAT VIDEOS AND GRAPHS"
 This readme has one graph of the final results, and no videos. For the host of videos and graphs, see the
 artificialLifeFinalProjectStuff directory, where its subdirectories are marked to indicate graphs and videos.
+
+I ended up running 100k sims -- 10 500 generation sims with 10 parents each, and 20 250 generation sims with 10 parents each. They're labeled accordingly, though it is worth mentioning that strangely, 250 sims look a lot better than the 500 ones in terms of movement strategies. I attribute this to 500 generations beginning to exploit their environment (no drag, collision approximation) rather than actually making a good bot. 
 
 # METHODS -- CREATION, MUTATION, SELECTION, EVOLUTION
 The simulation operates on Parallel Hill Climbing. This is to say that a lot of robots are created, then they are mutated, then the best ones are selected, and then all future robots evolve from there.
@@ -71,20 +69,12 @@ https://www.reddit.com/r/ludobots/wiki/installation/
 # RESULTS
 Parallel hill climbing works. If nothing else, this diagram essentially acts as a TL:DR of the entire results section:
 
-![alt text](https://github.com/AlexChen0/ArtificialLifeAC/blob/main/artificialLifeFinalProjectStuff/AllGraphs/run20.png)
+![alt text](https://github.com/AlexChen0/ArtificialLifeAC/blob/main/artificialLifeFinalProjectStuff/AllGraphs/500Run10.png)
 
-This plot shows evolution of 10 creatures in a random seed, that occur through 250 generations (for all the graphs, see the final project directory, and the AllGraphs subdirectory). 
-Similarly, a before/after can be found in the final project directory of this project, labeled "Teaser.mp4"
+This plot shows evolution of 10 creatures in a random seed, that occur through 500 generations (for all the graphs, see the final project directory, and the AllGraphs subdirectory). 
 
 At a high level, the bodies looked nothing like what they began as, and evolution often happened several times within each robot in a given seed, though never happened 
 from one generation to the next. And from this, robots found all different kinds of ways to move away from the camera: some fidgeted away, 
 others rotated to get away, some were able to crawl using a pseudo-leg, and finally one was even able to cartwheel. 
 
-However, evolution did get stuck. And it got stuck quite a bit. Bad seeds result in failed robots, ones where despite evolution taking place, did not end up 
-too much better than the original. These robots appeared to have the body parts in place to succeed, but likely did not have the brain to do so. 
-
-This makes sense in a lot of ways. Evolution of a new block can only go on a limited number of places, and each area a new block 
-can spawn can be vastly different depending on the weights it has placed from the various sensors. Therefore, finding the right mix 
-of sensors is nearly impossible.
-
-That being said, successes also happened a lot, and for that reason additional generations did not appear to be needed. 
+...but those are the 250-generation bots I ran to explore the possible outcomes. Strangely, the 500-generation bots became weird. They flipped, they sprinted, but few of them look like they'd succeed in reality. I attribute this to them exploiting simulations, taking advantage of situations with no drag, likely different friction calculations, and so on. 
