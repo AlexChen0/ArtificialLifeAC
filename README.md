@@ -1,4 +1,7 @@
 # RUNNING THE PROGRAM
+
+NOTE: mac only, due to use of the os module.
+
 simply navigate to this directory and use the command:
 
 python3 main.py
